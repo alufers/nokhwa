@@ -1501,7 +1501,7 @@ pub fn mjpeg_to_rgb(data: &[u8], rgba: bool) -> Result<Vec<u8>, NokhwaError> {
         }
     };
 
-    let scanlines_res: Option<Vec<u8>> = jpeg_decompress.read_scanlines_flat();
+    let scanlines_res: Result<Vec<u8>, std::io::Error> = jpeg_decompress.read_scanlines_flat();
     // assert!(jpeg_decompress.finish_decompress());
     if !jpeg_decompress.finish_decompress() {
         return Err(NokhwaError::ProcessFrameError {
@@ -1512,8 +1512,8 @@ pub fn mjpeg_to_rgb(data: &[u8], rgba: bool) -> Result<Vec<u8>, NokhwaError> {
     }
 
     match scanlines_res {
-        Some(pixels) => Ok(pixels),
-        None => Err(NokhwaError::ProcessFrameError {
+        Ok(pixels) => Ok(pixels),
+        Err(err) => Err(NokhwaError::ProcessFrameError {
             src: FrameFormat::MJPEG,
             destination: "RGB888".to_string(),
             error: "Failed to get read readlines into RGB888 pixels!".to_string(),
